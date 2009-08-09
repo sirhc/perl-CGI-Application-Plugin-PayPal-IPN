@@ -11,7 +11,8 @@ my $builder = Module::Build->new(
         'Test::More' => 0,
     },
     requires          => {
-        'version' => 0,
+        'Business::PayPal::IPN' => 0,
+        'version'               => 0,
     },
     add_to_cleanup    => [ 'CGI-Application-Plugin-PayPal-IPN-*' ],
 );

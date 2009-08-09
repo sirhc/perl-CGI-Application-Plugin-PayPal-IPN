@@ -9,8 +9,9 @@ WriteMakefile(
     ABSTRACT_FROM => 'lib/CGI/Application/Plugin/PayPal/IPN.pm',
     PL_FILES      => {},
     PREREQ_PM     => {
-        'Test::More' => 0,
-        'version'    => 0,
+        'Business::PayPal::IPN' => 0,
+        'Test::More'            => 0,
+        'version'               => 0,
     },
     dist          => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean         => { FILES => 'CGI-Application-Plugin-PayPal-IPN-*' },
