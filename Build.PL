@@ -8,7 +8,8 @@ my $builder = Module::Build->new(
     dist_author       => 'Chris Grau <cgrau@cpan.org>',
     dist_version_from => 'lib/CGI/Application/Plugin/PayPal/IPN.pm',
     build_requires    => {
-        'Test::More' => 0,
+        'Test::More'  => 0,
+        'URI::Escape' => 0,
     },
     requires          => {
         'Business::PayPal::IPN' => 0,
