@@ -1,10 +1,14 @@
 package CGI::Application::Plugin::PayPal::IPN;
+use base 'Exporter';
 
 use strict;
 use version; our $VERSION = qv('0.0.1');
 
 use Attribute::Handlers;
+use Business::PayPal::IPN;
 use CGI::Application;
+
+our @EXPORT = qw( ipn );
 
 sub CGI::Application::IPN : ATTR(CODE,BEGIN,CHECK) {
     my ( $pkg, $glob, $ref, $attr, $data, $phase ) = @_;
@@ -40,20 +44,26 @@ sub cgiapp_prerun {
 
     return if $rm ne $self->start_mode;
 
-    my $txn_type  = $self->query->param('txn_type');
+    my $query     = $self->query;
+    my $txn_type  = $query->param('txn_type');
     my %run_modes = $self->run_modes;
 
     return if !defined $txn_type || length $txn_type == 0;
 
-    if ( exists $run_modes{"_IPN_$txn_type"} ) {
-        $self->prerun_mode( "_IPN_$txn_type" );
-        return;
+    for my $run_mode ( "_IPN_$txn_type", '_IPN_default' ) {
+        if ( exists $run_modes{$run_mode} ) {
+            $self->{ '' . __PACKAGE__ }{'_ipn'}
+                = Business::PayPal::IPN->new( query => $query );
+            $self->prerun_mode( $run_mode );
+            return;
+        }
     }
+}
 
-    if ( exists $run_modes{'_IPN_default'} ) {
-        $self->prerun_mode( '_IPN_default' );
-        return;
-    }
+sub ipn {
+    my ( $self ) = @_;
+
+    return $self->{ '' . __PACKAGE__ }{'_ipn'};
 }
 
 1;
