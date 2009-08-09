@@ -14,8 +14,6 @@ use CGI::Application::Plugin::PayPal::IPN;
 }
 
 sub do_first : IPN(first) {
-    use Data::Dumper 'Dumper';
-    warn Dumper( $_[0] );
     return 'first';
 }
 
