@@ -10,6 +10,7 @@ WriteMakefile(
     PL_FILES      => {},
     PREREQ_PM     => {
         'Business::PayPal::IPN' => 0,
+        'CGI::Application'      => '4.00',
         'Test::More'            => 0,
         'version'               => 0,
     },

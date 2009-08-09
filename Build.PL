@@ -12,6 +12,7 @@ my $builder = Module::Build->new(
     },
     requires          => {
         'Business::PayPal::IPN' => 0,
+        'CGI::Application'      => '4.00',
         'version'               => 0,
     },
     add_to_cleanup    => [ 'CGI-Application-Plugin-PayPal-IPN-*' ],
