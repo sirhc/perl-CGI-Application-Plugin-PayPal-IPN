@@ -4,7 +4,18 @@ use base 'CGI::Application';
 use strict;
 use CGI::Application::Plugin::PayPal::IPN;
 
+# Prevent Business::PayPal::IPN from validating the transaction with PayPal.
+{
+    no warnings 'redefine';
+
+    sub Business::PayPal::IPN::_validate_txn {
+        return 1;
+    }
+}
+
 sub do_first : IPN(first) {
+    use Data::Dumper 'Dumper';
+    warn Dumper( $_[0] );
     return 'first';
 }
 
