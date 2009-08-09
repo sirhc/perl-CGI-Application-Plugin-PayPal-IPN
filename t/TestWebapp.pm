@@ -25,4 +25,10 @@ sub do_default : IPN {
     return 'fourth';
 }
 
+sub express_checkout : IPN(express_checkout) {
+    my ( $self ) = @_;
+
+    return $self->check_ipn;
+}
+
 1;
