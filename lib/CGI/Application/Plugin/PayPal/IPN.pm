@@ -17,7 +17,36 @@ This document describes CGI::Application::Plugin::PayPal::IPN version 0.0.1
 
 =head1 SYNOPSIS
 
+    use My::WebApp::IPN;
+
+    my $webapp = My::WebApp::IPN->new(
+        PARAMS => {
+            user_agent => ...,
+        },
+    );
+    $webapp->run;
+
+    ###
+
+    package My::WebApp::IPN;
+    use base 'CGI::Application';
+
     use CGI::Application::Plugin::PayPal::IPN;
+
+    __PACKAGE__->ipn->user_agent(...);
+
+    sub handle_completed : IPN(completed) {
+        my $self = shift;
+        my $ipn  = $self->ipn;
+
+        return 1;
+    }
+
+    sub handle_YYY : IPN(YYY) {
+        ...
+
+        return 0;
+    }
 
 =head1 DESCRIPTION
 
@@ -72,4 +101,5 @@ modify it under the same terms as Perl itself.  See L<perlartistic>.
 
 =head1 SEE ALSO
 
+L<CGI::Application>,
 L<Business::PayPal::IPN>
