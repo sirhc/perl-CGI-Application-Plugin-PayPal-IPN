@@ -37,6 +37,8 @@ sub import {
     if ( $caller->isa( 'CGI::Application' ) ) {
         $caller->add_callback( 'prerun', \&cgiapp_prerun );
     }
+
+    __PACKAGE__->export_to_level( 1, $caller, @EXPORT );
 }
 
 sub cgiapp_prerun {
