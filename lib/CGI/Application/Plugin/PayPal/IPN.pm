@@ -3,6 +3,59 @@ package CGI::Application::Plugin::PayPal::IPN;
 use strict;
 use version; our $VERSION = qv('0.0.1');
 
+use Attribute::Handlers;
+use CGI::Application;
+
+sub CGI::Application::IPN : ATTR(CODE,BEGIN,CHECK) {
+    my ( $pkg, $glob, $ref, $attr, $data, $phase ) = @_;
+
+    if ( ref $data && @$data > 0 ) {
+        for my $ipn ( @$data ) {
+            $pkg->add_callback(
+                'init' => sub {
+                    $_[0]->run_modes( "_IPN_$ipn" => $ref );
+                }
+            );
+        }
+    }
+    else {
+        $pkg->add_callback(
+            'init' => sub {
+                $_[0]->run_modes( "_IPN_default" => $ref );
+            }
+        );
+    }
+}
+
+sub import {
+    my $caller = caller;
+
+    if ( $caller->isa( 'CGI::Application' ) ) {
+        $caller->add_callback( 'prerun', \&cgiapp_prerun );
+    }
+}
+
+sub cgiapp_prerun {
+    my ( $self, $rm ) = @_;
+
+    return if $rm ne $self->start_mode;
+
+    my $txn_type  = $self->query->param('txn_type');
+    my %run_modes = $self->run_modes;
+
+    return if !defined $txn_type || length $txn_type == 0;
+
+    if ( exists $run_modes{"_IPN_$txn_type"} ) {
+        $self->prerun_mode( "_IPN_$txn_type" );
+        return;
+    }
+
+    if ( exists $run_modes{'_IPN_default'} ) {
+        $self->prerun_mode( '_IPN_default' );
+        return;
+    }
+}
+
 1;
 
 __END__
