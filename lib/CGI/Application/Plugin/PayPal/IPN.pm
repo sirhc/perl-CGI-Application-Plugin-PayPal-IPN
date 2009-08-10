@@ -13,22 +13,26 @@ our @EXPORT = qw( ipn );
 sub CGI::Application::IPN : ATTR(CODE,BEGIN,CHECK) {
     my ( $pkg, $glob, $ref, $attr, $data, $phase ) = @_;
 
-    if ( ref $data && @$data > 0 ) {
-        for my $ipn ( @$data ) {
-            $pkg->add_callback(
-                'init' => sub {
-                    $_[0]->run_modes( "_IPN_$ipn" => $ref );
-                }
-            );
-        }
+    if ( defined $data ) {
+        # $data can be any of the following (the first two are odd):
+        #     - 'foo'
+        #     - [ 'foo' ]
+        #     - [ 'foo', 'bar' ]
+        _add_run_mode( $pkg, $_, $ref ) for ref $data ? @$data : $data;
     }
     else {
-        $pkg->add_callback(
-            'init' => sub {
-                $_[0]->run_modes( "_IPN_default" => $ref );
-            }
-        );
+        _add_run_mode( $pkg, 'default', $ref );
     }
+}
+
+sub _add_run_mode {
+    my ( $pkg, $ipn, $ref ) = @_;
+
+    $pkg->add_callback(
+        'init' => sub {
+            $_[0]->run_modes( "_IPN_$ipn" => $ref );
+        }
+    );
 }
 
 sub import {
