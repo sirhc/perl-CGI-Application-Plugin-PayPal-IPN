@@ -78,7 +78,8 @@ __END__
 
 =head1 NAME
 
-CGI::Application::Plugin::PayPal::IPN - ...
+CGI::Application::Plugin::PayPal::IPN - PayPal IPN run mode support for
+CGI::Application
 
 =head1 VERSION
 
