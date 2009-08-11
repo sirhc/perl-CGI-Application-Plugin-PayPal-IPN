@@ -31,4 +31,10 @@ sub express_checkout : IPN(express_checkout) {
     return $self->check_ipn;
 }
 
+sub handle_error : IPN(error) {
+    my ( $self ) = @_;
+
+    return $self->ipn_error;
+}
+
 1;
