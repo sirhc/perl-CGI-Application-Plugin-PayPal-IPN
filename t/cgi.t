@@ -17,7 +17,9 @@ for my $test ( qw( first second third fourth ) ) {
 sub run_test {
     my ($test) = @_;
 
-    @ARGV = ( "txn_type=$test" );
+    # The extra key/value pairs are to keep Business::PayPal::IPN happy, which
+    # assumes any query with less than three keys is an error.
+    @ARGV = ( "txn_type=$test", map "$_=$_", qw( a b c ) );
 
     # Force the CGI module to re-read @ARGV.
     {

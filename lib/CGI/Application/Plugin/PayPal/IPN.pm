@@ -8,7 +8,7 @@ use Attribute::Handlers;
 use Business::PayPal::IPN;
 use CGI::Application;
 
-our @EXPORT = qw( ipn );
+our @EXPORT = qw( ipn ipn_error );
 
 sub CGI::Application::IPN : ATTR(CODE,BEGIN,CHECK) {
     my ( $pkg, $glob, $ref, $attr, $data, $phase ) = @_;
@@ -50,17 +50,35 @@ sub cgiapp_prerun {
 
     return if $rm ne $self->start_mode;
 
-    my $query     = $self->query;
-    my $txn_type  = $query->param('txn_type');
-    my %run_modes = $self->run_modes;
+    my $query    = $self->query;
+    my $txn_type = $query->param( 'txn_type' );
 
     return if !defined $txn_type || length $txn_type == 0;
 
-    for my $run_mode ( "_IPN_$txn_type", '_IPN_default' ) {
+    $self->{ '' . __PACKAGE__ }{'_ipn'}       = undef;
+    $self->{ '' . __PACKAGE__ }{'_ipn_error'} = undef;
+
+    my $ipn = Business::PayPal::IPN->new( query => $query );
+
+    if ( defined $ipn ) {
+        $self->{ '' . __PACKAGE__ }{'_ipn'} = $ipn;
+        _set_prerun_mode( $self, "_IPN_$txn_type", '_IPN_default' );
+    }
+    else {
+        $self->{ '' . __PACKAGE__ }{'_ipn_error'}
+            = Business::PayPal::IPN->error;
+        _set_prerun_mode( $self, '_IPN_error', '_IPN_default' );
+    }
+}
+
+sub _set_prerun_mode {
+    my ( $cgiapp, @run_modes ) = @_;
+
+    my %run_modes = $cgiapp->run_modes;
+
+    for my $run_mode ( @run_modes ) {
         if ( exists $run_modes{$run_mode} ) {
-            $self->{ '' . __PACKAGE__ }{'_ipn'}
-                = Business::PayPal::IPN->new( query => $query );
-            $self->prerun_mode( $run_mode );
+            $cgiapp->prerun_mode( $run_mode );
             return;
         }
     }
@@ -70,6 +88,12 @@ sub ipn {
     my ( $self ) = @_;
 
     return $self->{ '' . __PACKAGE__ }{'_ipn'};
+}
+
+sub ipn_error {
+    my ( $self ) = @_;
+
+    return $self->{ '' . __PACKAGE__ }{'_ipn_error'};
 }
 
 1;
