@@ -4,94 +4,26 @@ use base 'Exporter';
 use strict;
 use version; our $VERSION = qv('0.0.1');
 
-use Attribute::Handlers;
 use Business::PayPal::IPN;
-use CGI::Application;
 
 our @EXPORT = qw( ipn ipn_error ipn_gateway ipn_api_version ipn_version );
 
-sub CGI::Application::IPN : ATTR(CODE,BEGIN,CHECK) {
-    my ( $pkg, $glob, $ref, $attr, $data, $phase ) = @_;
-
-    if ( defined $data ) {
-        # $data can be any of the following (the first two are odd):
-        #     - 'foo'
-        #     - [ 'foo' ]
-        #     - [ 'foo', 'bar' ]
-        _add_run_mode( $pkg, $_, $ref ) for ref $data ? @$data : $data;
-    }
-    else {
-        _add_run_mode( $pkg, 'default', $ref );
-    }
-}
-
-sub _add_run_mode {
-    my ( $pkg, $ipn, $ref ) = @_;
-
-    $pkg->add_callback(
-        'init' => sub {
-            $_[0]->run_modes( "_IPN_$ipn" => $ref );
-        }
-    );
-}
-
-sub import {
-    my $caller = caller;
-
-    if ( $caller->isa( 'CGI::Application' ) ) {
-        $caller->add_callback( 'prerun', \&cgiapp_prerun );
-    }
-
-    __PACKAGE__->export_to_level( 1, $caller, @EXPORT );
-}
-
-sub cgiapp_prerun {
-    my ( $self, $rm ) = @_;
-
-    return if $rm ne $self->start_mode;
-
-    my $query    = $self->query;
-    my $txn_type = $query->param( 'txn_type' );
-
-    return if !defined $txn_type || length $txn_type == 0;
-
-    $self->{ '' . __PACKAGE__ }{'_ipn'}       = undef;
-    $self->{ '' . __PACKAGE__ }{'_ipn_error'} = undef;
-
-    my $ipn = Business::PayPal::IPN->new( query => $query );
-
-    if ( defined $ipn ) {
-        $self->{ '' . __PACKAGE__ }{'_ipn'} = $ipn;
-        _set_prerun_mode( $self, "_IPN_$txn_type", '_IPN_default' );
-    }
-    else {
-        $self->{ '' . __PACKAGE__ }{'_ipn_error'}
-            = Business::PayPal::IPN->error;
-        _set_prerun_mode( $self, '_IPN_error', '_IPN_default' );
-    }
-}
-
-sub _set_prerun_mode {
-    my ( $cgiapp, @run_modes ) = @_;
-
-    my %run_modes = $cgiapp->run_modes;
-
-    for my $run_mode ( @run_modes ) {
-        if ( exists $run_modes{$run_mode} ) {
-            $cgiapp->prerun_mode( $run_mode );
-            return;
-        }
-    }
-}
-
 sub ipn {
     my ( $self ) = @_;
+
+    if ( !exists $self->{ '' . __PACKAGE__ }{'_ipn'} ) {
+        _do_ipn($self);
+    }
 
     return $self->{ '' . __PACKAGE__ }{'_ipn'};
 }
 
 sub ipn_error {
     my ( $self ) = @_;
+
+    if ( !exists $self->{ '' . __PACKAGE__ }{'_ipn_error'} ) {
+        _do_ipn($self);
+    }
 
     return $self->{ '' . __PACKAGE__ }{'_ipn_error'};
 }
@@ -118,13 +50,35 @@ sub ipn_version {
     return $Business::PayPal::IPN::VERSION;
 }
 
+sub _do_ipn {
+    my ( $cgiapp ) = @_;
+
+    $cgiapp->{ '' . __PACKAGE__ }{'_ipn'}       = undef;
+    $cgiapp->{ '' . __PACKAGE__ }{'_ipn_error'} = undef;
+
+    my $query    = $cgiapp->query;
+    my $txn_type = $query->param( 'txn_type' );
+
+    return if !defined $txn_type || length $txn_type == 0;
+
+    my $ipn = Business::PayPal::IPN->new( query => $query );
+
+    if ( defined $ipn ) {
+        $self->{ '' . __PACKAGE__ }{'_ipn'} = $ipn;
+    }
+    else {
+        $self->{ '' . __PACKAGE__ }{'_ipn_error'}
+            = Business::PayPal::IPN->error;
+    }
+}
+
 1;
 
 __END__
 
 =head1 NAME
 
-CGI::Application::Plugin::PayPal::IPN - PayPal IPN run mode support for
+CGI::Application::Plugin::PayPal::IPN - PayPal IPN support for
 CGI::Application
 
 =head1 VERSION
@@ -135,11 +89,7 @@ This document describes CGI::Application::Plugin::PayPal::IPN version 0.0.1
 
     use My::WebApp::IPN;
 
-    my $webapp = My::WebApp::IPN->new(
-        PARAMS => {
-            user_agent => ...,
-        },
-    );
+    my $webapp = My::WebApp::IPN->new;
     $webapp->run;
 
     ###
@@ -149,19 +99,11 @@ This document describes CGI::Application::Plugin::PayPal::IPN version 0.0.1
 
     use CGI::Application::Plugin::PayPal::IPN;
 
-    __PACKAGE__->ipn->user_agent(...);
-
-    sub handle_completed : IPN(completed) {
+    sub start {
         my $self = shift;
         my $ipn  = $self->ipn;
 
-        return 1;
-    }
-
-    sub handle_YYY : IPN(YYY) {
-        ...
-
-        return 0;
+        # ...
     }
 
 =head1 DESCRIPTION
@@ -179,20 +121,6 @@ This document describes CGI::Application::Plugin::PayPal::IPN version 0.0.1
 =item C<< $cgiapp->ipn_api_version() >>
 
 =item C<< $cgiapp->ipn_version() >>
-
-=back
-
-=head1 DIAGNOSTICS
-
-=over
-
-=item C<< Error message here, perhaps with %s placeholders >>
-
-[Description of error here]
-
-=item C<< Another error message here >>
-
-[Description of error here]
 
 =back
 
