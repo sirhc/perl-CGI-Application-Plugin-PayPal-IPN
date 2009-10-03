@@ -9,6 +9,8 @@ t/00.load.t
 t/01.pod.t
 t/02.pod-coverage.t
 t/03.perl-critic.t
-t/cgi.t
 t/ipn_error.t
+t/ipn_gateway.t
 t/ipn.t
+t/ipn_version.t
+t/TestWebapp.pm
