@@ -1,7 +1,8 @@
 Build.PL
 Changes
 MANIFEST
-Makefile.PL
+META.yml      # created by "Build dist"
+Makefile.PL   # created by "Build dist"
 README
 lib/CGI/Application/Plugin/PayPal/IPN.pm
 t/00.load.t
