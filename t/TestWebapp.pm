@@ -13,28 +13,32 @@ use CGI::Application::Plugin::PayPal::IPN;
     }
 }
 
-sub do_first : IPN(first) {
-    return 'first';
+sub new {
+    my ( $class, %param ) = @_;
+
+    my $self = $class->SUPER::new;
+
+    $self->{'TestWebapp'} = \%param;
+
+    return $self;
 }
 
-sub do_second : IPN(second,third) {
-    return 'second or third';
+sub setup {
+    my $self = shift;
+
+    $self->run_modes( 'start' => 'start' );
 }
 
-sub do_default : IPN {
-    return 'fourth';
-}
+sub start {
+    my $self     = shift;
+    my $ipn      = $self->ipn;
+    my $callback = $self->{'TestWebapp'}{'callback'};
 
-sub express_checkout : IPN(express_checkout) {
-    my ( $self ) = @_;
+    if ( ref $callback eq 'CODE' ) {
+        $callback->($self);
+    }
 
-    return $self->check_ipn;
-}
-
-sub handle_error : IPN(error) {
-    my ( $self ) = @_;
-
-    return $self->ipn_error;
+    return 'ok';
 }
 
 1;

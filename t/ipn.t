@@ -2,8 +2,10 @@
 
 use strict;
 use warnings;
-use Test::More tests => 41;
+
+use Test::More tests => 42;
 use URI::Escape;
+
 use FindBin;
 use lib $FindBin::Bin;
 
@@ -55,23 +57,26 @@ my %data = (
     'shipping'            => '0.00',
 );
 
+# The CGI module will build its query from the command line.
 @ARGV = map { join '=', $_, uri_escape( $data{$_} ) } keys %data;
 
-# The express_checkout IPN handler will pass control to this method.
-sub TestWebapp::check_ipn {
-    my ( $self ) = @_;
+$ENV{'CGI_APP_RETURN_ONLY'} = 1;
 
-    my $ipn = $self->ipn;
+my $webapp = TestWebapp->new(
+    callback => \&check_ipn,
+);
+
+my $output = $webapp->run;
+
+like $output, qr/^ok\z/ms, 'Output';
+
+sub check_ipn {
+    my $cgiapp = shift;
+    my $ipn    = $cgiapp->ipn;
+
     isa_ok $ipn, 'Business::PayPal::IPN';
 
     while ( my ( $k, $v ) = each %data ) {
-        is $ipn->$k, $v, $k;
+        is $ipn->$k, $v, "$k = $v";
     }
 }
-
-# Suppress output.
-close STDOUT;
-open STDOUT, '>', \my $stdout or die "Can't open STDOUT: $!";
-
-my $webapp = TestWebapp->new;
-$webapp->run;
