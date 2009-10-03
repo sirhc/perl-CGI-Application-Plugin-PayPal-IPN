@@ -64,10 +64,10 @@ sub _do_ipn {
     my $ipn = Business::PayPal::IPN->new( query => $query );
 
     if ( defined $ipn ) {
-        $self->{ '' . __PACKAGE__ }{'_ipn'} = $ipn;
+        $cgiapp->{ '' . __PACKAGE__ }{'_ipn'} = $ipn;
     }
     else {
-        $self->{ '' . __PACKAGE__ }{'_ipn_error'}
+        $cgiapp->{ '' . __PACKAGE__ }{'_ipn_error'}
             = Business::PayPal::IPN->error;
     }
 }
