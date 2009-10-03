@@ -8,7 +8,7 @@ use Attribute::Handlers;
 use Business::PayPal::IPN;
 use CGI::Application;
 
-our @EXPORT = qw( ipn ipn_error );
+our @EXPORT = qw( ipn ipn_error ipn_gateway ipn_api_version ipn_version );
 
 sub CGI::Application::IPN : ATTR(CODE,BEGIN,CHECK) {
     my ( $pkg, $glob, $ref, $attr, $data, $phase ) = @_;
@@ -96,6 +96,28 @@ sub ipn_error {
     return $self->{ '' . __PACKAGE__ }{'_ipn_error'};
 }
 
+sub ipn_gateway {
+    my ( $self, $value ) = @_;
+
+    if ( @_ == 2 ) {
+        $Business::PayPal::IPN::GTW = $value;
+    }
+
+    return $Business::PayPal::IPN::GTW;
+}
+
+sub ipn_api_version {
+    my ( $self, $value ) = @_;
+
+    return $Business::PayPal::IPN::SUPPORTEDV;
+}
+
+sub ipn_version {
+    my ( $self, $value ) = @_;
+
+    return $Business::PayPal::IPN::VERSION;
+}
+
 1;
 
 __END__
@@ -146,6 +168,20 @@ This document describes CGI::Application::Plugin::PayPal::IPN version 0.0.1
 
 =head1 INTERFACE 
 
+=over
+
+=item C<< $cgiapp->ipn() >>
+
+=item C<< $cgiapp->ipn_error() >>
+
+=item C<< $cgiapp->ipn_gateway() >>
+
+=item C<< $cgiapp->ipn_api_version() >>
+
+=item C<< $cgiapp->ipn_version() >>
+
+=back
+
 =head1 DIAGNOSTICS
 
 =over
@@ -167,7 +203,13 @@ environment variables.
 
 =head1 DEPENDENCIES
 
-None.
+=over
+
+=item *
+
+L<Business::PayPal::IPN>
+
+=back
 
 =head1 INCOMPATIBILITIES
 
