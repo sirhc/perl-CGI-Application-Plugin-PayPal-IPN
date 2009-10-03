@@ -4,7 +4,7 @@ use Module::Build;
 
 my $builder = Module::Build->new(
     module_name        => 'CGI::Application::Plugin::PayPal::IPN',
-    license            => 'perl',
+    license            => 'mit',
     dist_author        => 'Chris Grau <cgrau@cpan.org>',
     dist_version_from  => 'lib/CGI/Application/Plugin/PayPal/IPN.pm',
     build_requires     => {
